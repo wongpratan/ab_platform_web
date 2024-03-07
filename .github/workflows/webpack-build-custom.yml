@@ -1,4 +1,4 @@
-name: Docker Build Custom
+name: Webpack Build Custom
 
 # Manually trigger
 on:
