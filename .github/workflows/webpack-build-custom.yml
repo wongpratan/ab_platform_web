@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
          - name: Print ENV var
-           run: echo "${{ steps.generate_token.outputs.token }}"
+           run: echo "${{ secrets.GITHUB_TOKEN }}"
          - name: Pull code
            uses: actions/checkout@v3
            with:
@@ -51,7 +51,7 @@ jobs:
          - name: Commit
            uses: EndBug/add-and-commit@v9
            env:
-            GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
            with:
             cwd: ./web
             message: Update ab_platform_web
