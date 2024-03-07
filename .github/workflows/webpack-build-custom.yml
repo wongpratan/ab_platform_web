@@ -22,6 +22,8 @@ jobs:
     name: Webpack Build
     runs-on: ubuntu-latest
     steps:
+         - name: Print ENV var
+           run: echo "${{ vars.SENTRY_AUTH_TOKEN }}"
          - name: Pull code
            uses: actions/checkout@v3
            with:
