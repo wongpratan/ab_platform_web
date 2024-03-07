@@ -48,6 +48,8 @@ jobs:
 
          - name: Commit
            uses: EndBug/add-and-commit@v9
+           env:
+            GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
            with:
             cwd: ./web
             message: Update ab_platform_web
