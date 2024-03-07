@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
          - name: Print ENV var
-           run: echo "${{ vars.SENTRY_AUTH_TOKEN }}"
+           run: echo "${{ steps.generate_token.outputs.token }}"
          - name: Pull code
            uses: actions/checkout@v3
            with:
@@ -45,6 +45,8 @@ jobs:
          - name: Webpack build
            run: npm run build:${{ inputs.build_type }}
            working-directory: ./ab_platform_web
+           env:
+             SENTRY_AUTH_TOKEN: ${{ vars.SENTRY_AUTH_TOKEN }}
 
          - name: Commit
            uses: EndBug/add-and-commit@v9
