@@ -1,59 +1,67 @@
-name: Webpack Build Custom
+name: Docker Build Package
 
 # Manually trigger
 on:
   workflow_dispatch:
     inputs:
-      target_branch:
-        description: What is the branch name to build (digiserve/ab_service_web)
-        type: string
+      docker_tags:
+        description: Docker tags to publish with (comma seperated)
         required: true
+        type: string
       build_type:
         description: Which build type
         default: update
         type: choice
         options: [ update, dev ]
 
-permissions:
-  contents: write
-
 jobs:
   webpack-build:
-    name: Webpack Build
+    name: Build Webpack
     runs-on: ubuntu-latest
     steps:
-         - name: Print ENV var
-           run: echo "${{ secrets.GITHUB_TOKEN }}"
-         - name: Pull code
-           uses: actions/checkout@v3
-           with:
-              path: ab_platform_web
-              submodules: true
-              ref: ${{ inputs.ref }}
+        - name: Pull code
+          uses: actions/checkout@v3
+          with:
+            path: ab_platform_web
+            submodules: true
+            ref: ${{ inputs.ref }}
 
-         - name: Pull ab_service_web
-           uses: actions/checkout@v3
-           with:
-              path: web
-              repository: wongpratan/ab_service_web
-              token: ${{ secrets.GITHUB_TOKEN }}
+        - name: Pull ab_service_web
+          uses: actions/checkout@v3
+          with:
+            path: web
+            repository: digi-serve/ab_service_web
+            token: ${{ secrets.GITHUB_TOKEN }}
 
-         - name: Install dependencies
-           run: npm install
-           working-directory: ./ab_platform_web
+        - name: Install dependencies
+          run: npm install
+          working-directory: ./ab_platform_web
 
-         - name: Webpack build
-           run: npm run build:${{ inputs.build_type }}
-           working-directory: ./ab_platform_web
-           env:
-             SENTRY_AUTH_TOKEN: ${{ vars.SENTRY_AUTH_TOKEN }}
+        - name: Webpack build
+          run: npm run build:${{ inputs.build_type }}
+          working-directory: ./ab_platform_web
 
-         - name: Commit
-           uses: EndBug/add-and-commit@v9
-           env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-           with:
-            cwd: ./web
-            message: Update ab_platform_web
-            new_branch: ${{ inputs.target_branch }}
-            default_author: github_actor
+    docker-build-push:
+      name: Build/Push Docker
+      runs-on: ubuntu-latest
+      steps:
+        - name: Set up QEMU
+          uses: docker/setup-qemu-action@v3
+
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v3
+          
+        - name: Login to Docker Hub
+          uses: docker/login-action@v3
+          with:
+            username: ${{ secrets.DOCKER_USERNAME }}
+            password: ${{ secrets.DOCKER_PASSWORD }}
+
+        - name: Build and push
+          uses: docker/build-push-action@v5
+          with:
+            push: true
+            platforms: linux/amd64,linux/arm64
+            build-args: BRANCH=${{ inputs.base_tag }}
+            tags: ${{ inputs.docker_tags }}
+            context: ./web
